@@ -127,3 +127,11 @@ pub enum DecodedInstr {
 
     Noop,
 }
+
+#[repr(u8)]
+//Condition Flags
+pub enum CondFlag {
+    Pos = 1 << 0,
+    Zero = 1 << 1,
+    Neg = 1 << 2,
+}
