@@ -1,3 +1,5 @@
+use num_derive::{FromPrimitive, ToPrimitive};
+
 pub enum Register {
     R0,
     R1,
@@ -13,6 +15,7 @@ pub enum Register {
 }
 
 #[repr(u8)]
+#[derive(FromPrimitive, ToPrimitive)]
 // Raw opcode values
 pub enum RawOpCode {
     Br = 0,
