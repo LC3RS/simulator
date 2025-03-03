@@ -131,7 +131,8 @@ pub enum DecodedInstr {
     Noop,
 }
 
-#[repr(u8)]
+#[repr(u16)]
+#[derive(ToPrimitive, FromPrimitive)]
 //Condition Flags
 pub enum CondFlag {
     Pos = 1 << 0,
@@ -140,10 +141,10 @@ pub enum CondFlag {
 }
 
 impl CondFlag {
-    pub fn from_u16(x: u16) -> Self {
-        if x == 0 {
+    pub fn from_reg_value(val: u16) -> Self {
+        if val == 0 {
             Self::Zero
-        } else if (x >> 15) != 0 {
+        } else if (val >> 15) != 0 {
             Self::Neg
         } else {
             Self::Pos

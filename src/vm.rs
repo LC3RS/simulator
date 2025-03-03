@@ -1,8 +1,8 @@
-use num_traits::FromPrimitive;
+use num_traits::{FromPrimitive, ToPrimitive};
 
 use crate::{
     constants::{MAX_MEMORY, PC_START},
-    enums::{DecodedInstr, RawOpCode},
+    enums::{CondFlag, DecodedInstr, RawOpCode},
 };
 
 pub struct Machine {
@@ -53,6 +53,7 @@ impl Machine {
         let raw_op = RawOpCode::from_u16(raw_instr >> 12).unwrap();
 
         match raw_op {
+            //RawOpCode::Add => {}
             RawOpCode::Noop => DecodedInstr::Noop,
             _ => DecodedInstr::Noop, // TODO: remove after complete
         }
@@ -63,5 +64,11 @@ impl Machine {
         match decoded_instr {
             _ => (),
         }
+    }
+
+    fn update_flags(&mut self, reg_idx: usize) {
+        self.cond = CondFlag::from_reg_value(self.registers[reg_idx])
+            .to_u16()
+            .unwrap();
     }
 }
