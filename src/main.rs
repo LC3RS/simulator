@@ -1,5 +1,10 @@
+pub mod constants;
 pub mod enums;
+pub mod vm;
+
+use vm::Machine;
 
 fn main() {
-    println!("Hello, world!");
+    let m = Machine::default();
+    m.print_registers();
 }
