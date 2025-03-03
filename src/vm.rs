@@ -43,7 +43,7 @@ impl Machine {
         }
     }
 
-    fn mem_read(&self, address: u16){
+    fn mem_read(&self, address: u16) -> u16 {
         self.memory[address as usize]
     }
 
@@ -108,7 +108,7 @@ impl Machine {
                 let cond_flag = (raw_instr >> 9) & 0x7;
                 let pc_offset = sign_extend(raw_instr & 0x1FF, 9);
 
-                if (cond_flag & self.cond)!=0 {
+                if (cond_flag & self.cond) != 0 {
                     self.pc += pc_offset;
                 }
             }
@@ -123,12 +123,11 @@ impl Machine {
                 let miku_bit = (raw_instr >> 11) & 0x1;
                 self.registers[7] = self.pc;
 
-                if miku_bit==1 {
+                if miku_bit == 1 {
                     let pc_offset = sign_extend(raw_instr & 0x7FF, 11);
                     self.pc += pc_offset;
-                }
-                else{
-                    let base = (raw_instr >>6) & 0x7;
+                } else {
+                    let base = (raw_instr >> 6) & 0x7;
                     self.pc = self.registers[base as usize];
                 }
             }
@@ -137,10 +136,9 @@ impl Machine {
                 let dest = (raw_instr >> 9) & 0x7;
                 let pc_offset = sign_extend(raw_instr & 0x1FF, 9);
 
-                self.registers[dest as usize] = mem_read(self.pc + pc_offset);
+                self.registers[dest as usize] = self.mem_read(self.pc + pc_offset);
                 self.update_flags(dest as usize);
             }
-
 
             RawOpCode::Noop => (),
             _ => (), // TODO: remove after complete
