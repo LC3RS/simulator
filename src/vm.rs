@@ -1,8 +1,9 @@
-use num_traits::{FromPrimitive, ToPrimitive};
+use num_traits::{sign, FromPrimitive, ToPrimitive};
 
 use crate::{
     constants::{MAX_MEMORY, PC_START},
-    enums::{CondFlag, DecodedInstr, RawOpCode},
+    enums::{CondFlag, RawOpCode, Register},
+    utils::sign_extend,
 };
 
 pub struct Machine {
@@ -38,8 +39,7 @@ impl Machine {
 
         while self.is_running {
             let raw_instr = self.fetch();
-            let decoded_instr = self.decode(raw_instr);
-            self.execute(decoded_instr)
+            self.decode_and_execute(raw_instr);
         }
     }
 
@@ -49,21 +49,32 @@ impl Machine {
         instr
     }
 
-    fn decode(&self, raw_instr: u16) -> DecodedInstr {
+    fn decode_and_execute(&mut self, raw_instr: u16) {
         let raw_op = RawOpCode::from_u16(raw_instr >> 12).unwrap();
 
         match raw_op {
-            //RawOpCode::Add => {}
-            RawOpCode::Noop => DecodedInstr::Noop,
-            _ => DecodedInstr::Noop, // TODO: remove after complete
-        }
-    }
+            RawOpCode::Add => {
+                let dest = (raw_instr >> 9) & 0x7;
+                let src1 = (raw_instr >> 6) & 0x7;
 
-    fn execute(&self, decoded_instr: DecodedInstr) {
-        // TODO: implement execute
-        match decoded_instr {
-            _ => (),
-        }
+                // Check if we are in immediate mode
+                let imm_flag = (raw_instr >> 5) & 0x1;
+
+                if imm_flag == 1 {
+                    let imm5 = sign_extend(raw_instr & 0x1F, 5);
+                    self.registers[dest as usize] = self.registers[src1 as usize] + imm5;
+                } else {
+                    let src2 = raw_instr & 0x7;
+                    self.registers[dest as usize] =
+                        self.registers[src1 as usize] + self.registers[src2 as usize]
+                }
+
+                self.update_flags(dest as usize);
+            }
+
+            RawOpCode::Noop => (),
+            _ => (), // TODO: remove after complete
+        };
     }
 
     fn update_flags(&mut self, reg_idx: usize) {

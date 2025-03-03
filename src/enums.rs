@@ -1,7 +1,9 @@
 use num_derive::{FromPrimitive, ToPrimitive};
 
+#[repr(usize)]
+#[derive(FromPrimitive, ToPrimitive)]
 pub enum Register {
-    R0,
+    R0 = 0,
     R1,
     R2,
     R3,
@@ -33,102 +35,6 @@ pub enum RawOpCode {
     Noop,
     Lea,
     Trap, // HALT
-}
-
-// Instructions decoded from the opcodes
-pub enum DecodedInstr {
-    Add {
-        dest: Register,
-        src1: Register,
-        src2: Register,
-    },
-
-    AddImm {
-        dest: Register,
-        src: Register,
-        imm: i16,
-    },
-
-    And {
-        dest: Register,
-        src1: Register,
-        src2: Register,
-    },
-
-    AndImm {
-        dest: Register,
-        src: Register,
-        imm: i16,
-    },
-
-    Br {
-        n: bool,
-        z: bool,
-        p: bool,
-        offset: i16, // FIX: offset9
-    },
-
-    Jmp {
-        base: Register,
-    },
-
-    Jsr {
-        offset: i16, // FIX: offset11
-    },
-
-    Jsrr {
-        base: Register,
-    },
-
-    Ld {
-        dest: Register,
-        offset: i16, // FIX: offset9
-    },
-
-    Ldi {
-        dest: Register,
-        offset: i16, // FIX: offset9
-    },
-
-    Ldr {
-        dest: Register,
-        base: Register,
-        offset: i16, //FIX: offset6
-    },
-
-    Lea {
-        dest: Register,
-        offset: i16, //FIX: offset9
-    },
-
-    Not {
-        dest: Register,
-        src: Register,
-    },
-
-    Ret,
-
-    St {
-        src: Register,
-        offset: i16, // FIX: offset9
-    },
-
-    Sti {
-        src: Register,
-        offset: i16, // FIX: offset9
-    },
-
-    Str {
-        src: Register,
-        base: Register,
-        offset: i16, // FIX: offset6
-    },
-
-    Trap {
-        trapvect: u8,
-    },
-
-    Noop,
 }
 
 #[repr(u16)]
