@@ -66,8 +66,36 @@ impl Machine {
                 } else {
                     let src2 = raw_instr & 0x7;
                     self.registers[dest as usize] =
-                        self.registers[src1 as usize] + self.registers[src2 as usize]
+                        self.registers[src1 as usize] + self.registers[src2 as usize];
                 }
+
+                self.update_flags(dest as usize);
+            }
+
+            RawOpCode::And => {
+                let dest = (raw_instr >> 9) & 0x7;
+                let src1 = (raw_instr >> 6) & 0x7;
+
+                // Check if we are in immediate mode
+                let imm_flag = (raw_instr >> 5) & 0x1;
+
+                if imm_flag == 1 {
+                    let imm5 = sign_extend(raw_instr & 0x1F, 5);
+                    self.registers[dest as usize] = self.registers[src1 as usize] & imm5;
+                } else {
+                    let src2 = raw_instr & 0x7;
+                    self.registers[dest as usize] =
+                        self.registers[src1 as usize] & self.registers[src2 as usize];
+                }
+
+                self.update_flags(dest as usize);
+            }
+
+            RawOpCode::Not => {
+                let dest = (raw_instr >> 9) & 0x7;
+                let src = (raw_instr >> 6) & 0x7;
+
+                self.registers[dest as usize] = !self.registers[src as usize];
 
                 self.update_flags(dest as usize);
             }
