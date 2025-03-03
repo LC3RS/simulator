@@ -1,7 +1,7 @@
 use num_traits::FromPrimitive;
 
 use crate::{
-    constants::MAX_MEMORY,
+    constants::{MAX_MEMORY, PC_START},
     enums::{DecodedInstr, RawOpCode},
 };
 
@@ -17,7 +17,7 @@ impl Default for Machine {
     fn default() -> Self {
         Machine {
             registers: [0; 8],
-            pc: 0,
+            pc: PC_START,
             cond: 0,
             memory: [0; MAX_MEMORY],
             is_running: false,
