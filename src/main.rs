@@ -1,5 +1,6 @@
 pub mod constants;
 pub mod enums;
+pub mod memory;
 pub mod utils;
 pub mod vm;
 

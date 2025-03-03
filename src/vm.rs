@@ -1,37 +1,21 @@
-use num_traits::{sign, FromPrimitive, ToPrimitive};
+use num_traits::{FromPrimitive, ToPrimitive};
 
 use crate::{
-    constants::{MAX_MEMORY, PC_START},
     enums::{CondFlag, RawOpCode, Register},
+    memory::{MemoryManager, RegisterManager},
     utils::sign_extend,
 };
 
+#[derive(Default)]
 pub struct Machine {
-    registers: [u16; 8],
-    pc: u16,
-    cond: u16,
-    memory: [u16; MAX_MEMORY],
+    reg: RegisterManager,
+    mem: MemoryManager,
     is_running: bool,
-}
-
-impl Default for Machine {
-    fn default() -> Self {
-        Machine {
-            registers: [0; 8],
-            pc: PC_START,
-            cond: 0,
-            memory: [0; MAX_MEMORY],
-            is_running: false,
-        }
-    }
 }
 
 impl Machine {
     pub fn print_registers(&self) {
-        for reg in &self.registers {
-            print!("{reg} ");
-        }
-        println!();
+        self.reg.debug_all();
     }
 
     pub fn run(&mut self) {
@@ -43,13 +27,9 @@ impl Machine {
         }
     }
 
-    fn mem_read(&self, address: u16) -> u16 {
-        self.memory[address as usize]
-    }
-
     fn fetch(&mut self) -> u16 {
-        let instr = self.memory[self.pc as usize];
-        self.pc += 1;
+        let instr = self.mem.read(self.reg.get(Register::PC));
+        self.reg.incr(Register::PC);
         instr
     }
 
@@ -58,86 +38,88 @@ impl Machine {
 
         match raw_op {
             RawOpCode::Add => {
-                let dest = (raw_instr >> 9) & 0x7;
-                let src1 = (raw_instr >> 6) & 0x7;
+                let dest = Register::from_u16((raw_instr >> 9) & 0x7).unwrap();
+                let src1 = Register::from_u16((raw_instr >> 6) & 0x7).unwrap();
 
                 // Check if we are in immediate mode
                 let imm_flag = (raw_instr >> 5) & 0x1;
 
                 if imm_flag == 1 {
                     let imm5 = sign_extend(raw_instr & 0x1F, 5);
-                    self.registers[dest as usize] = self.registers[src1 as usize] + imm5;
+                    self.reg.set(dest, self.reg.get(src1) + imm5);
                 } else {
-                    let src2 = raw_instr & 0x7;
-                    self.registers[dest as usize] =
-                        self.registers[src1 as usize] + self.registers[src2 as usize];
+                    let src2 = Register::from_u16(raw_instr & 0x7).unwrap();
+                    self.reg.set(dest, self.reg.get(src1) + self.reg.get(src2));
                 }
 
-                self.update_flags(dest as usize);
+                self.update_flags(dest);
             }
 
             RawOpCode::And => {
-                let dest = (raw_instr >> 9) & 0x7;
-                let src1 = (raw_instr >> 6) & 0x7;
+                let dest = Register::from_u16((raw_instr >> 9) & 0x7).unwrap();
+                let src1 = Register::from_u16((raw_instr >> 6) & 0x7).unwrap();
 
                 // Check if we are in immediate mode
                 let imm_flag = (raw_instr >> 5) & 0x1;
 
                 if imm_flag == 1 {
                     let imm5 = sign_extend(raw_instr & 0x1F, 5);
-                    self.registers[dest as usize] = self.registers[src1 as usize] & imm5;
+                    self.reg.set(dest, self.reg.get(src1) & imm5);
                 } else {
-                    let src2 = raw_instr & 0x7;
-                    self.registers[dest as usize] =
-                        self.registers[src1 as usize] & self.registers[src2 as usize];
+                    let src2 = Register::from_u16(raw_instr & 0x7).unwrap();
+                    self.reg.set(dest, self.reg.get(src1) & self.reg.get(src2));
                 }
 
-                self.update_flags(dest as usize);
+                self.update_flags(dest);
             }
 
             RawOpCode::Not => {
-                let dest = (raw_instr >> 9) & 0x7;
-                let src = (raw_instr >> 6) & 0x7;
+                let dest = Register::from_u16((raw_instr >> 9) & 0x7).unwrap();
+                let src = Register::from_u16((raw_instr >> 6) & 0x7).unwrap();
 
-                self.registers[dest as usize] = !self.registers[src as usize];
+                self.reg.set(dest, !self.reg.get(src));
 
-                self.update_flags(dest as usize);
+                self.update_flags(dest);
             }
 
             RawOpCode::Br => {
                 let cond_flag = (raw_instr >> 9) & 0x7;
                 let pc_offset = sign_extend(raw_instr & 0x1FF, 9);
 
-                if (cond_flag & self.cond) != 0 {
-                    self.pc += pc_offset;
+                if (cond_flag & self.reg.get(Register::COND)) != 0 {
+                    self.reg.incr_by(Register::PC, pc_offset);
                 }
             }
 
             RawOpCode::Jmp => {
-                let base = (raw_instr >> 6) & 0x7;
-
-                self.pc = self.registers[base as usize];
+                let base = Register::from_u16((raw_instr >> 6) & 0x7).unwrap();
+                self.reg.copy(Register::PC, base);
             }
 
             RawOpCode::Jsr => {
+                // Check if instruction was JSR or JSRR
                 let miku_bit = (raw_instr >> 11) & 0x1;
-                self.registers[7] = self.pc;
+
+                self.reg.copy(Register::R7, Register::PC);
 
                 if miku_bit == 1 {
+                    /* JSR */
                     let pc_offset = sign_extend(raw_instr & 0x7FF, 11);
-                    self.pc += pc_offset;
+                    self.reg.incr_by(Register::PC, pc_offset);
                 } else {
-                    let base = (raw_instr >> 6) & 0x7;
-                    self.pc = self.registers[base as usize];
+                    /* JSSR */
+                    let base = Register::from_u16((raw_instr >> 6) & 0x7).unwrap();
+                    self.reg.copy(Register::PC, base);
                 }
             }
 
             RawOpCode::Ld => {
-                let dest = (raw_instr >> 9) & 0x7;
+                let dest = Register::from_u16((raw_instr >> 9) & 0x7).unwrap();
                 let pc_offset = sign_extend(raw_instr & 0x1FF, 9);
+                let addr = self.reg.get(Register::PC) + pc_offset;
 
-                self.registers[dest as usize] = self.mem_read(self.pc + pc_offset);
-                self.update_flags(dest as usize);
+                self.reg.set(dest, self.mem.read(addr));
+                self.update_flags(dest);
             }
 
             RawOpCode::Noop => (),
@@ -145,9 +127,8 @@ impl Machine {
         };
     }
 
-    fn update_flags(&mut self, reg_idx: usize) {
-        self.cond = CondFlag::from_reg_value(self.registers[reg_idx])
-            .to_u16()
-            .unwrap();
+    fn update_flags(&mut self, register: Register) {
+        let flag = CondFlag::from_reg_value(self.reg.get(register));
+        self.reg.set(Register::COND, flag.to_u16().unwrap());
     }
 }
