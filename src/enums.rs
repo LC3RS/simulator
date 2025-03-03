@@ -138,3 +138,15 @@ pub enum CondFlag {
     Zero = 1 << 1,
     Neg = 1 << 2,
 }
+
+impl CondFlag {
+    pub fn from_u16(x: u16) -> Self {
+        if x == 0 {
+            Self::Zero
+        } else if (x >> 15) != 0 {
+            Self::Neg
+        } else {
+            Self::Pos
+        }
+    }
+}
