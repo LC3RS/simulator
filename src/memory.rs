@@ -68,3 +68,38 @@ impl MemoryManager {
         self.memory[addr as usize] = val;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_register_api() {
+        let mut reg = RegisterManager::default();
+
+        assert_eq!(reg.get(Register::PC), 0x3000);
+
+        reg.set(Register::R0, 0x69);
+        assert_eq!(reg.get(Register::R0), 0x69);
+
+        reg.copy(Register::R7, Register::R0);
+        assert_eq!(reg.get(Register::R7), 0x69);
+
+        reg.incr(Register::R0);
+        assert_eq!(reg.get(Register::R0), 0x6a);
+
+        reg.incr_by(Register::R0, 5);
+        assert_eq!(reg.get(Register::R0), 0x6f);
+    }
+
+    #[test]
+    fn test_memory_api() {
+        let mut mem = MemoryManager::default();
+
+        mem.write(0, 0x69);
+        assert_eq!(mem.read(0), 0x69);
+
+        mem.write(0xffff, 0x7f);
+        assert_eq!(mem.read(0xffff), 0x7f);
+    }
+}
