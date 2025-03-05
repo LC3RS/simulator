@@ -126,7 +126,7 @@ impl Machine {
                 let dest = Register::from_u16((raw_instr >> 9) & 0x7).unwrap();
                 let base = Register::from_u16((raw_instr >> 6) & 0x7).unwrap();
                 let offset = sign_extend(raw_instr & 0x3F, 6);
-                let data = self.mem.read(self.reg.get(base)+offset);
+                let data = self.mem.read(self.reg.get(base) + offset);
 
                 self.reg.set(dest, data);
                 self.update_flags(dest);
@@ -145,22 +145,24 @@ impl Machine {
             RawOpCode::Lea => {
                 let dest = Register::from_u16((raw_instr >> 9) & 0x7).unwrap();
                 let pc_offset = sign_extend(raw_instr & 0x1FF, 9);
+                let eff_addr = self.reg.get(Register::PC) + pc_offset;
 
-                self.reg.set(dest, self.reg.get(Register::PC)+pc_offset);
+                self.reg.set(dest, eff_addr);
                 self.update_flags(dest);
             }
 
             RawOpCode::St => {
                 let src = Register::from_u16((raw_instr >> 9) & 0x7).unwrap();
                 let pc_offset = sign_extend(raw_instr & 0x1FF, 9);
+                let addr = self.reg.get(Register::PC) + pc_offset;
 
-                self.mem.write(self.reg.get(Register::PC)+pc_offset, self.reg.get(src));
+                self.mem.write(addr, self.reg.get(src));
             }
 
             RawOpCode::Sti => {
                 let src = Register::from_u16((raw_instr >> 9) & 0x7).unwrap();
                 let pc_offset = sign_extend(raw_instr & 0x1FF, 9);
-                let miku_addr = self.reg.get(Register::PC)+pc_offset;
+                let miku_addr = self.reg.get(Register::PC) + pc_offset;
 
                 self.mem.write(self.mem.read(miku_addr), self.reg.get(src));
             }
@@ -169,8 +171,9 @@ impl Machine {
                 let src = Register::from_u16((raw_instr >> 9) & 0x7).unwrap();
                 let base = Register::from_u16((raw_instr >> 6) & 0x7).unwrap();
                 let offset = sign_extend(raw_instr & 0x3F, 6);
+                let addr = self.reg.get(base) + offset;
 
-                self.mem.write(self.reg.get(base)+offset, self.reg.get(src));
+                self.mem.write(addr, self.reg.get(src));
             }
 
             RawOpCode::Noop => (),
