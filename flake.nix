@@ -30,6 +30,7 @@
               pre-commit
               rustPackages.clippy
               yaml-language-server
+              cargo-tarpaulin
             ];
             RUST_SRC_PATH = rustPlatform.rustLibSrc;
           };
