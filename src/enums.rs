@@ -28,6 +28,7 @@ pub enum RawOpCode {
     And,
     Ldr,
     Str,
+    Rti, /* Unused */
     Not,
     Ldi,
     Sti,

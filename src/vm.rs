@@ -75,6 +75,10 @@ impl Machine {
     }
 
     fn decode_and_execute(&mut self, raw_instr: u16) {
+        if raw_instr == 0 {
+            return;
+        }
+        self.debug(format!("Instr: {:#018b}", raw_instr).as_str());
         let raw_op = RawOpCode::from_u16(raw_instr >> 12).unwrap();
 
         match raw_op {
@@ -219,70 +223,76 @@ impl Machine {
             }
 
             RawOpCode::Trap => {
-                let trap_code = TrapCode::from_u16(raw_instr & 0xFF).unwrap();
-                match trap_code {
-                    TrapCode::GetC => {
-                        let mut buff = [0; 1];
-                        io::stdin().read_exact(&mut buff).unwrap();
+                let trap_code = TrapCode::from_u16(raw_instr & 0xFF);
 
-                        self.reg.set(Register::R0, buff[0] as u16);
-                    }
+                if let Some(trap_code) = trap_code {
+                    match trap_code {
+                        TrapCode::GetC => {
+                            let mut buff = [0; 1];
+                            io::stdin().read_exact(&mut buff).unwrap();
 
-                    TrapCode::Out => {
-                        let ch = self.reg.get(Register::R0) as u8 as char;
-                        print!("{}", ch);
-                        io::stdout().flush().expect("Failed to flush stdout");
-                    }
-
-                    TrapCode::Puts => {
-                        let mut miku_str = String::new();
-                        let mut miku_addr = self.reg.get(Register::R0);
-                        while self.mem.read(miku_addr) != 0x0000 {
-                            let ch = self.mem.read(miku_addr) as u8 as char;
-                            miku_str.push(ch);
-                            miku_addr += 1;
+                            self.reg.set(Register::R0, buff[0] as u16);
                         }
-                        print!("{miku_str}");
-                        io::stdout().flush().expect("Failed to flush stdout");
-                    }
 
-                    TrapCode::In => {
-                        print!("Enter a character : ");
-                        io::stdout().flush().expect("Failed to flush stdout");
-                        let ch = io::stdin()
-                            .bytes()
-                            .next()
-                            .and_then(|result| result.ok())
-                            .unwrap() as u16;
-                        self.reg.set(Register::R0, ch);
-                    }
+                        TrapCode::Out => {
+                            let ch = self.reg.get(Register::R0) as u8 as char;
+                            print!("{}", ch);
+                            io::stdout().flush().expect("Failed to flush stdout");
+                        }
 
-                    TrapCode::PutsP => {
-                        let mut miku_str = String::new();
-                        let mut miku_addr = self.reg.get(Register::R0);
-
-                        while self.mem.read(miku_addr) != 0x0000 {
-                            let val = self.mem.read(miku_addr);
-                            let c1 = (val & 0xFF) as u8 as char;
-                            miku_str.push(c1);
-                            let c2 = (val >> 8) as u8 as char;
-                            if c2 != '\0' {
-                                miku_str.push(c2);
+                        TrapCode::Puts => {
+                            let mut miku_str = String::new();
+                            let mut miku_addr = self.reg.get(Register::R0);
+                            while self.mem.read(miku_addr) != 0x0000 {
+                                let ch = self.mem.read(miku_addr) as u8 as char;
+                                miku_str.push(ch);
+                                miku_addr += 1;
                             }
-                            miku_addr += 1;
+                            print!("{miku_str}");
+                            io::stdout().flush().expect("Failed to flush stdout");
                         }
-                        print!("{miku_str}");
-                        io::stdout().flush().expect("Failed to flush stdout");
-                    }
 
-                    TrapCode::Halt => {
-                        print!("Machine Halted");
-                        io::stdout().flush().expect("Failed to flush stdout");
-                        self.is_running = false;
+                        TrapCode::In => {
+                            print!("Enter a character : ");
+                            io::stdout().flush().expect("Failed to flush stdout");
+                            let ch = io::stdin()
+                                .bytes()
+                                .next()
+                                .and_then(|result| result.ok())
+                                .unwrap() as u16;
+                            self.reg.set(Register::R0, ch);
+                        }
+
+                        TrapCode::PutsP => {
+                            let mut miku_str = String::new();
+                            let mut miku_addr = self.reg.get(Register::R0);
+
+                            while self.mem.read(miku_addr) != 0x0000 {
+                                let val = self.mem.read(miku_addr);
+                                let c1 = (val & 0xFF) as u8 as char;
+                                miku_str.push(c1);
+                                let c2 = (val >> 8) as u8 as char;
+                                if c2 != '\0' {
+                                    miku_str.push(c2);
+                                }
+                                miku_addr += 1;
+                            }
+                            print!("{miku_str}");
+                            io::stdout().flush().expect("Failed to flush stdout");
+                        }
+
+                        TrapCode::Halt => {
+                            print!("Machine Halted");
+                            io::stdout().flush().expect("Failed to flush stdout");
+                            self.is_running = false;
+                        }
                     }
+                } else {
+                    println!("Something fucked");
+                    println!("{raw_instr}");
                 }
             }
-
+            RawOpCode::Rti => (),
             RawOpCode::Noop => (),
         };
     }
