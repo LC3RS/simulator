@@ -46,6 +46,17 @@ pub enum CondFlag {
     Neg = 1 << 2,
 }
 
+#[repr(u8)]
+#[derive(ToPrimitive, FromPrimitive)]
+pub enum TrapCode {
+    GetC = 0x20,
+    Out,
+    Puts,
+    In,
+    PutsP,
+    Halt,
+}
+
 impl CondFlag {
     pub fn from_reg_value(val: u16) -> Self {
         if val == 0 {
