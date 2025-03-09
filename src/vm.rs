@@ -1,7 +1,13 @@
+use byteorder::{BigEndian, ReadBytesExt};
 use num_traits::{FromPrimitive, ToPrimitive};
-use std::io::{self, Read, Write};
+use std::{
+    fs::File,
+    io::{self, BufReader, Read, Write},
+    path::PathBuf,
+};
 
 use crate::{
+    constants::MAX_MEMORY,
     enums::{CondFlag, RawOpCode, Register, TrapCode},
     memory::{MemoryManager, RegisterManager},
     utils::sign_extend,
@@ -12,20 +18,54 @@ pub struct Machine {
     reg: RegisterManager,
     mem: MemoryManager,
     is_running: bool,
+    debug_mode: bool,
 }
 
 impl Machine {
-    pub fn print_registers(&self) {
-        self.reg.debug_all();
+    pub fn enter_debug_mode(&mut self) {
+        self.debug_mode = true;
+    }
+
+    pub fn debug(&self, s: &str) {
+        if self.debug_mode {
+            println!("[Debug] {s}");
+        }
     }
 
     pub fn run(&mut self) {
         self.is_running = true;
 
-        while self.is_running {
+        while self.is_running && (self.reg.get(Register::PC) as usize) < MAX_MEMORY {
             let raw_instr = self.fetch();
             self.decode_and_execute(raw_instr);
         }
+    }
+
+    pub fn load_image(&mut self, path: PathBuf) -> Result<(), io::Error> {
+        self.debug(format!("Attempting to load image file: {}", path.display()).as_str());
+
+        let mut file = BufReader::new(File::open(path)?);
+        let origin = file.read_u16::<BigEndian>()?;
+        let mut addr = origin;
+
+        loop {
+            match file.read_u16::<BigEndian>() {
+                Ok(instr) => {
+                    self.mem.write(addr, instr);
+                    addr += 1;
+                }
+                Err(e) => {
+                    if e.kind() == io::ErrorKind::UnexpectedEof {
+                        self.debug("Image loaded successfully")
+                    } else {
+                        return Err(e);
+                    }
+                    break;
+                }
+            }
+        }
+
+        Ok(())
     }
 
     fn fetch(&mut self) -> u16 {
