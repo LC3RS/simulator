@@ -6,6 +6,9 @@ pub mod vm;
 
 use clap::Parser;
 use std::{error::Error, path::PathBuf};
+use termios::{
+    tcsetattr, BRKINT, ECHO, ICANON, ICRNL, IGNBRK, IGNCR, INLCR, ISTRIP, IXON, PARMRK, TCSANOW,
+};
 use vm::Machine;
 
 #[derive(Parser)]
@@ -21,6 +24,15 @@ struct Cli {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    // Setup code
+    let stdin = 0;
+    let termios = termios::Termios::from_fd(stdin).unwrap();
+    let mut new_termios = termios;
+    new_termios.c_iflag &= IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON;
+    new_termios.c_lflag &= !(ICANON | ECHO); // no echo and canonical mode
+    tcsetattr(stdin, TCSANOW, &new_termios).unwrap();
+
+    // Run machine
     let args = Cli::parse();
     let mut machine = Machine::default();
 
@@ -30,6 +42,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     machine.load_image(args.file)?;
     machine.run();
+
+    // Cleanup code
+    tcsetattr(stdin, TCSANOW, &termios).unwrap();
 
     Ok(())
 }
