@@ -205,7 +205,8 @@ impl Machine {
                 let pc_offset = sign_extend(raw_instr & 0x1FF, 9);
                 let miku_addr = self.reg.get(Register::PC) + pc_offset;
 
-                self.mem.write(self.mem.read(miku_addr), self.reg.get(src));
+                let addr = self.mem.read(miku_addr);
+                self.mem.write(addr, self.reg.get(src));
             }
 
             RawOpCode::Str => {
