@@ -1,5 +1,6 @@
 [package]
 name = "simulator"
+description = "Simulator for an LC-3 Virtual Machine, written in Rust"
 version = "0.1.0"
 edition = "2021"
 
