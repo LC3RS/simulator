@@ -68,3 +68,10 @@ impl CondFlag {
         }
     }
 }
+
+#[repr(u16)]
+#[derive(ToPrimitive)]
+pub enum MemMappedReg {
+    Kbsr = 0xFE00,
+    Kbdr = 0xFE02,
+}

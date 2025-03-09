@@ -1,8 +1,10 @@
+use std::io::{self, Read};
+
 use num_traits::ToPrimitive;
 
 use crate::{
     constants::{MAX_MEMORY, PC_START},
-    enums::Register,
+    enums::{MemMappedReg, Register},
 };
 
 pub struct RegisterManager {
@@ -59,8 +61,18 @@ impl Default for MemoryManager {
 }
 
 impl MemoryManager {
-    pub fn read(&self, addr: u16) -> u16 {
-        // TODO: implement memory mapped addresses
+    pub fn read(&mut self, addr: u16) -> u16 {
+        if addr == MemMappedReg::Kbsr.to_u16().unwrap() {
+            let mut buf = [0; 1];
+            io::stdin().read_exact(&mut buf).unwrap();
+            if buf[0] != 0 {
+                self.write(MemMappedReg::Kbsr.to_u16().unwrap(), 1 << 15);
+                self.write(MemMappedReg::Kbdr.to_u16().unwrap(), buf[0] as u16);
+            } else {
+                self.write(MemMappedReg::Kbsr.to_u16().unwrap(), 0);
+            }
+        }
+
         self.memory[addr as usize]
     }
 
