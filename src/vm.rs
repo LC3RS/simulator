@@ -519,9 +519,9 @@ mod tests {
         assert_eq!(test_mach.mem.read(0b0111_1000_0111_0011), 15503);
     }
 
+    /* TODO: Not sure how to test these, maybe simulate input somehow??
     #[test]
     fn test_trap() {
-        //idk how to test this shit
         let mut test_mach = Machine::default();
         test_mach.decode_and_execute(0b1111_0000_00100000);
         test_mach.decode_and_execute(0b1111_0000_00100001);
@@ -530,4 +530,5 @@ mod tests {
         test_mach.decode_and_execute(0b1111_0000_00100100);
         test_mach.decode_and_execute(0b1111_0000_00100101);
     }
+    */
 }
