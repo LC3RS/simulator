@@ -1,5 +1,5 @@
 use byteorder::{BigEndian, ReadBytesExt};
-use num_traits::{FromPrimitive, ToPrimitive, WrappingAdd};
+use num_traits::{FromPrimitive, ToPrimitive};
 use std::{
     fs::File,
     io::{self, BufReader, Read, Write},
@@ -307,7 +307,6 @@ impl Machine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::enums::Register::COND;
     #[test]
     fn test_add() {
         let mut test_mach = Machine::default();

@@ -10,10 +10,6 @@ pub fn sign_extend(mut x: u16, bit_count: u16) -> u16 {
     x
 }
 
-pub fn end_swap(x: u16) -> u16 {
-    (x >> 8) | (x << 8)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -28,9 +24,12 @@ mod tests {
 
     #[test]
     fn test_end_swap() {
-        assert_eq!(end_swap(0x6969u16), 0x6969u16);
-        assert_eq!(end_swap(0x6699u16), 0x9966u16);
-        assert_eq!(end_swap(0x6996u16), 0x9669u16);
-        assert_eq!(end_swap(0b1100_1010_1101_0110u16), 0b1101_0110_1100_1010u16);
+        assert_eq!(0x6969u16.rotate_right(8), 0x6969u16);
+        assert_eq!(0x6699u16.rotate_right(8), 0x9966u16);
+        assert_eq!(0x6996u16.rotate_right(8), 0x9669u16);
+        assert_eq!(
+            0b1100_1010_1101_0110u16.rotate_right(8),
+            0b1101_0110_1100_1010u16
+        );
     }
 }
