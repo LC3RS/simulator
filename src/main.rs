@@ -8,20 +8,20 @@ pub mod vm;
 
 use clap::Parser;
 use cli::Cli;
-use std::error::Error;
+use error::Result;
 use termios::{
     tcsetattr, BRKINT, ECHO, ICANON, ICRNL, IGNBRK, IGNCR, INLCR, ISTRIP, IXON, PARMRK, TCSANOW,
 };
 use vm::Machine;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     // Setup code
     let stdin = 0;
-    let termios = termios::Termios::from_fd(stdin).unwrap();
+    let termios = termios::Termios::from_fd(stdin)?;
     let mut new_termios = termios;
     new_termios.c_iflag &= IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON;
     new_termios.c_lflag &= !(ICANON | ECHO); // no echo and canonical mode
-    tcsetattr(stdin, TCSANOW, &new_termios).unwrap();
+    tcsetattr(stdin, TCSANOW, &new_termios)?;
 
     // Run machine
     let args = Cli::parse();
@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     machine.run();
 
     // Cleanup code
-    tcsetattr(stdin, TCSANOW, &termios).unwrap();
+    tcsetattr(stdin, TCSANOW, &termios)?;
 
     Ok(())
 }

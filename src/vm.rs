@@ -9,6 +9,7 @@ use std::{
 use crate::{
     constants::MAX_MEMORY,
     enums::{CondFlag, RawOpCode, Register, TrapCode},
+    error::{Error, ErrorKind, Result},
     memory::{MemoryManager, RegisterManager},
     utils::sign_extend,
 };
@@ -41,7 +42,7 @@ impl Machine {
         }
     }
 
-    pub fn load_image(&mut self, path: PathBuf) -> Result<(), io::Error> {
+    pub fn load_image(&mut self, path: PathBuf) -> Result<()> {
         self.debug(format!("Attempting to load image file: {}", path.display()).as_str());
 
         let mut file = BufReader::new(File::open(path)?);
@@ -56,9 +57,10 @@ impl Machine {
                 }
                 Err(e) => {
                     if e.kind() == io::ErrorKind::UnexpectedEof {
-                        self.debug("Image loaded successfully")
+                        self.debug("Image loaded successfully");
                     } else {
-                        return Err(e);
+                        self.debug(e.to_string().as_str());
+                        return Err(Error::new(ErrorKind::IOError));
                     }
                     break;
                 }
