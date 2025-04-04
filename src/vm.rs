@@ -306,6 +306,7 @@ impl Machine {
     }
 }
 
+#[allow(clippy::unusual_byte_groupings)]
 #[cfg(test)]
 mod tests {
     use super::*;
