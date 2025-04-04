@@ -3,7 +3,6 @@ use std::{fmt, io, result::Result as StdResult};
 #[derive(Clone, Copy, Debug)]
 pub enum ErrorKind {
     IOError,
-    JibbyError,
 }
 
 #[derive(Debug, Clone)]
@@ -25,7 +24,6 @@ impl ErrorKind {
     pub fn as_str(&self) -> &'static str {
         match self {
             ErrorKind::IOError => "io error",
-            ErrorKind::JibbyError => "invalid value",
         }
     }
 }
