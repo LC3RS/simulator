@@ -29,11 +29,13 @@ impl RegisterManager {
     }
 
     pub fn incr(&mut self, reg: Register) {
-        self.registers[reg.to_usize().unwrap()] += 1;
+        self.registers[reg.to_usize().unwrap()] =
+            self.registers[reg.to_usize().unwrap()].wrapping_add(1);
     }
 
     pub fn incr_by(&mut self, reg: Register, val: u16) {
-        self.registers[reg.to_usize().unwrap()] += val;
+        self.registers[reg.to_usize().unwrap()] =
+            self.registers[reg.to_usize().unwrap()].wrapping_add(val);
     }
 
     pub fn copy(&mut self, sink: Register, src: Register) {
