@@ -520,6 +520,21 @@ mod tests {
         assert_eq!(test_mach.mem.read(0b0111_1000_0111_0011), 15503);
     }
 
+    #[test]
+    fn test_debug() {
+        let mut test_mach = Machine::default();
+        test_mach.enter_debug_mode();
+        test_mach.debug("test_debug");
+    }
+
+    #[test]
+    fn test_run() {
+        let mut test_mach = Machine::default();
+        let res = test_mach.load_image(PathBuf::from("roms/hello-world.obj"));
+        assert!(res.is_ok());
+        test_mach.run();
+    }
+
     /* TODO: Not sure how to test these, maybe simulate input somehow??
     #[test]
     fn test_trap() {

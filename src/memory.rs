@@ -102,6 +102,8 @@ mod tests {
 
         reg.incr_by(Register::R0, 5);
         assert_eq!(reg.get(Register::R0), 0x6f);
+
+        reg.debug_all();
     }
 
     #[test]
