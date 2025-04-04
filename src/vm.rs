@@ -1,4 +1,5 @@
 use byteorder::{BigEndian, ReadBytesExt};
+use colored::Colorize;
 use num_traits::{FromPrimitive, ToPrimitive};
 use std::{
     fs::File,
@@ -30,7 +31,9 @@ impl Machine {
     pub fn debug(&self, s: &str) {
         if self.debug_mode {
             let s = handle_newline(s);
-            write!(io::stdout(), "[Debug] {s}\r\n").expect("Failed to write to stdout");
+            let prompt = "[Debug]".cyan().bold();
+
+            write!(io::stdout(), "{prompt} {s}\r\n").expect("Failed to write to stdout");
         }
     }
 
@@ -38,9 +41,11 @@ impl Machine {
         self.is_running = true;
 
         while self.is_running && (self.reg.get(Register::PC) as usize) < MAX_MEMORY {
-            self.debug(format!("Paused at [PC = {:#x}]", self.reg.get(Register::PC)).as_str());
+            let posn = format!("[PC = {:#x}]", self.reg.get(Register::PC)).yellow();
+            self.debug(format!("Paused at {posn}").as_str());
             let raw_instr = self.fetch();
-            self.debug(format!("Next Instruction: {:#b}", raw_instr).as_str());
+            let formatted = format!("{:#b}", raw_instr).green();
+            self.debug(format!("Next Instruction: {formatted}").as_str());
 
             if self.debug_mode {
                 self.reg.debug_all();

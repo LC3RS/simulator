@@ -1,5 +1,6 @@
 use std::io::{self, Read};
 
+use colored::Colorize;
 use num_traits::ToPrimitive;
 
 use crate::{
@@ -48,11 +49,12 @@ impl RegisterManager {
     pub fn debug_all(&self) {
         let mut i = 0;
         for reg in &self.registers[..8] {
-            write!(io::stdout(), "[R{i} = {reg:#x}] ").expect("Failed to write to stdout");
+            let formatted = format!("[R{i} = {reg:#x}]").yellow();
+            write!(io::stdout(), "{formatted}\r\n").expect("Failed to write to stdout");
             i += 1;
         }
-        write!(io::stdout(), "[COND = {:#x}] ", self.get(Register::COND))
-            .expect("Failed to write to stdout");
+        let formatted = format!("[COND = {:#x}]", self.get(Register::COND)).yellow();
+        write!(io::stdout(), "{formatted} ").expect("Failed to write to stdout");
         write!(io::stdout(), "\r\n").expect("Failed to write to stdout");
     }
 }
