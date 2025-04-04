@@ -13,11 +13,12 @@ use error::Result;
 use vm::Machine;
 
 fn main() -> Result<()> {
+    let args = Cli::parse();
+
     // Setup code
     terminal::enable_raw_mode().expect("Could not turn on raw mode");
 
     // Run machine
-    let args = Cli::parse();
     let mut machine = Machine::default();
 
     if args.debug {
