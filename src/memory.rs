@@ -7,6 +7,8 @@ use crate::{
     enums::{MemMappedReg, Register},
 };
 
+use ::std::io::Write;
+
 pub struct RegisterManager {
     registers: [u16; 11],
 }
@@ -42,11 +44,16 @@ impl RegisterManager {
         self.registers[sink.to_usize().unwrap()] = self.registers[src.to_usize().unwrap()];
     }
 
+    #[allow(clippy::explicit_counter_loop)]
     pub fn debug_all(&self) {
-        for reg in &self.registers {
-            print!("{reg} ");
+        let mut i = 0;
+        for reg in &self.registers[..8] {
+            write!(io::stdout(), "[R{i} = {reg:#x}] ").expect("Failed to write to stdout");
+            i += 1;
         }
-        println!();
+        write!(io::stdout(), "[COND = {:#x}] ", self.get(Register::COND))
+            .expect("Failed to write to stdout");
+        write!(io::stdout(), "\r\n").expect("Failed to write to stdout");
     }
 }
 

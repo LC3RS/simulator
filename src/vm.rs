@@ -30,7 +30,7 @@ impl Machine {
     pub fn debug(&self, s: &str) {
         if self.debug_mode {
             let s = handle_newline(s);
-            write!(io::stdout(), "[Debug] {s}").expect("Failed to write to stdout");
+            write!(io::stdout(), "[Debug] {s}\r\n").expect("Failed to write to stdout");
         }
     }
 
@@ -38,7 +38,20 @@ impl Machine {
         self.is_running = true;
 
         while self.is_running && (self.reg.get(Register::PC) as usize) < MAX_MEMORY {
+            self.debug(format!("Paused at [PC = {:#x}]", self.reg.get(Register::PC)).as_str());
             let raw_instr = self.fetch();
+            self.debug(format!("Next Instruction: {:#b}", raw_instr).as_str());
+
+            if self.debug_mode {
+                self.reg.debug_all();
+                self.debug("Press q to quit, any other key to continue");
+                let mut buff = [0; 1];
+                io::stdin().read_exact(&mut buff).unwrap();
+                if buff[0] == b'q' {
+                    return;
+                }
+            }
+
             self.decode_and_execute(raw_instr);
         }
     }
@@ -81,7 +94,6 @@ impl Machine {
         if raw_instr == 0 {
             return;
         }
-        self.debug(format!("Instr: {:#018b}", raw_instr).as_str());
         let raw_op = RawOpCode::from_u16(raw_instr >> 12).unwrap();
 
         match raw_op {

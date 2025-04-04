@@ -11,7 +11,7 @@ pub struct Cli {
     #[arg(short, long, value_name = "FILE")]
     pub file: PathBuf,
 
-    /// Turn on debug-mode
+    /// Turn on step-debugger-mode
     #[arg(short, long, default_value_t = false)]
     pub debug: bool,
 }
