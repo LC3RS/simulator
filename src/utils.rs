@@ -10,6 +10,10 @@ pub fn sign_extend(mut x: u16, bit_count: u16) -> u16 {
     x
 }
 
+pub fn handle_newline(s: &str) -> String {
+    s.replace("\n", "\r\n")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

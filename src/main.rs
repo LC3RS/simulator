@@ -8,20 +8,13 @@ pub mod vm;
 
 use clap::Parser;
 use cli::Cli;
+use crossterm::terminal;
 use error::Result;
-use termios::{
-    tcsetattr, BRKINT, ECHO, ICANON, ICRNL, IGNBRK, IGNCR, INLCR, ISTRIP, IXON, PARMRK, TCSANOW,
-};
 use vm::Machine;
 
 fn main() -> Result<()> {
     // Setup code
-    let stdin = 0;
-    let termios = termios::Termios::from_fd(stdin)?;
-    let mut new_termios = termios;
-    new_termios.c_iflag &= IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON;
-    new_termios.c_lflag &= !(ICANON | ECHO); // no echo and canonical mode
-    tcsetattr(stdin, TCSANOW, &new_termios)?;
+    terminal::enable_raw_mode().expect("Could not turn on raw mode");
 
     // Run machine
     let args = Cli::parse();
@@ -35,7 +28,7 @@ fn main() -> Result<()> {
     machine.run();
 
     // Cleanup code
-    tcsetattr(stdin, TCSANOW, &termios)?;
+    terminal::disable_raw_mode().expect("Could not turn off raw mode");
 
     Ok(())
 }

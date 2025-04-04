@@ -11,7 +11,7 @@ use crate::{
     enums::{CondFlag, RawOpCode, Register, TrapCode},
     error::{Error, ErrorKind, Result},
     memory::{MemoryManager, RegisterManager},
-    utils::sign_extend,
+    utils::{handle_newline, sign_extend},
 };
 
 #[derive(Default)]
@@ -29,7 +29,8 @@ impl Machine {
 
     pub fn debug(&self, s: &str) {
         if self.debug_mode {
-            println!("[Debug] {s}");
+            let s = handle_newline(s);
+            write!(io::stdout(), "[Debug] {s}").expect("Failed to write to stdout");
         }
     }
 
@@ -239,7 +240,9 @@ impl Machine {
 
                         TrapCode::Out => {
                             let ch = self.reg.get(Register::R0) as u8 as char;
-                            print!("{}", ch);
+                            let miku_str = String::from(ch);
+                            let miku_str = handle_newline(&miku_str);
+                            write!(io::stdout(), "{miku_str}").expect("Failed to write to stdout");
                             io::stdout().flush().expect("Failed to flush stdout");
                         }
 
@@ -251,12 +254,14 @@ impl Machine {
                                 miku_str.push(ch);
                                 miku_addr = miku_addr.wrapping_add(1);
                             }
-                            print!("{miku_str}");
+                            miku_str = handle_newline(&miku_str);
+                            write!(io::stdout(), "{miku_str}").expect("Failed to write to stdout");
                             io::stdout().flush().expect("Failed to flush stdout");
                         }
 
                         TrapCode::In => {
-                            print!("Enter a character : ");
+                            write!(io::stdout(), "Enter a character: ")
+                                .expect("Failed to write to stdout");
                             io::stdout().flush().expect("Failed to flush stdout");
                             let ch = io::stdin()
                                 .bytes()
@@ -280,12 +285,14 @@ impl Machine {
                                 }
                                 miku_addr = miku_addr.wrapping_add(1);
                             }
-                            print!("{miku_str}");
+                            miku_str = handle_newline(&miku_str);
+                            write!(io::stdout(), "{miku_str}").expect("Failed to write to stdout");
                             io::stdout().flush().expect("Failed to flush stdout");
                         }
 
                         TrapCode::Halt => {
-                            print!("Machine Halted");
+                            writeln!(io::stdout(), "Machine Halted")
+                                .expect("Faield to write to stdout");
                             io::stdout().flush().expect("Failed to flush stdout");
                             self.is_running = false;
                         }
